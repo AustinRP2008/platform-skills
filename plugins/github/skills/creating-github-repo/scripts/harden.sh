@@ -5,7 +5,7 @@ set -euo pipefail
 here=$(cd "$(dirname "$0")/.." && pwd)
 repo=${1:?usage: harden.sh <owner>/<repo> [--approvals N] [--require-check NAME ...] [--apply]}
 shift
-apply=false approvals=0 checks='[]'
+apply=false approvals=1 checks='[]'
 while [[ $# -gt 0 ]]; do
   case $1 in
     --apply) apply=true;;
@@ -15,7 +15,7 @@ while [[ $# -gt 0 ]]; do
   esac
   shift
 done
-[[ $approvals =~ ^[0-6]$ ]] || { echo "approvals must be 0-6" >&2; exit 64; }
+[[ $approvals =~ ^[1-6]$ ]] || { echo "approvals must be 1-6 (code-owner review needs at least one)" >&2; exit 64; }
 r=repos/$repo
 visibility=$(gh api "$r" -q .visibility) || { echo "cannot read $repo" >&2; exit 2; }
 $apply || echo "dry run for $repo ($visibility); re-run with --apply"
@@ -48,7 +48,7 @@ if [[ $visibility == public ]]; then
   call PATCH "$r/code-scanning/default-setup" '{"state":"configured","query_suite":"default"}'
   branch=$(jq -c --argjson n "$approvals" --argjson extra "$checks" '
     (.rules[] | select(.type == "pull_request") | .parameters.required_approving_review_count) = $n
-    | (.rules[] | select(.type == "pull_request") | .parameters.require_code_owner_review) = ($n > 0)
+    | (.rules[] | select(.type == "pull_request") | .parameters.require_code_owner_review) = true
     | (.rules[] | select(.type == "required_status_checks") | .parameters.required_status_checks) +=
         [ $extra[] | {context: ., integration_id: 15368} ]' "$here/assets/ruleset-branch.json")
   upsert_ruleset "$branch"

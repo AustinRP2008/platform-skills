@@ -25,7 +25,7 @@ expect_deny "audit: force push allowed" "force pushes to main are allowed" \
   "$s/audit.sh" --state "$(mutate fp '(.rulesets[0].rules) |= map(select(.type != "non_fast_forward"))')"
 expect_deny "audit: ruleset in evaluate mode does not count" "no active ruleset targets main" \
   "$s/audit.sh" --state "$(mutate eval '.rulesets[0].enforcement = "evaluate"')"
-expect_deny "audit: bypass actor" "someone can bypass the ruleset" \
+expect_deny "audit: bypass outside a PR" "someone can bypass the ruleset outside a PR" \
   "$s/audit.sh" --state "$(mutate bp '.rulesets[0].bypass_actors = [{"actor_id":5,"actor_type":"RepositoryRole","bypass_mode":"always"}]')"
 expect_deny "audit: push protection off" "secrets can be pushed" \
   "$s/audit.sh" --state "$(mutate pp '.repo.security_and_analysis.secret_scanning_push_protection.status = "disabled"')"
@@ -34,6 +34,17 @@ expect_deny "audit: writable workflow token" "the default GITHUB_TOKEN can write
 jq '.files[".github/workflows/security.yml"] = false' "$here/private-compliant.json" > "$tmp/nosec.json"
 expect_deny "audit: private repo without the compensating scan" ".github/workflows/security.yml is missing" \
   "$s/audit.sh" --state "$tmp/nosec.json"
+expect_deny "audit: PR merges without code-owner approval" "PRs can merge without a code owner's approval" \
+  "$s/audit.sh" --state "$(mutate co '(.rulesets[0].rules[] | select(.type == "pull_request") | .parameters.require_code_owner_review) = false')"
+expect_deny "audit: commits after approval allowed" "new commits can be pushed after the code owner approved" \
+  "$s/audit.sh" --state "$(mutate lp '(.rulesets[0].rules[] | select(.type == "pull_request") | .parameters.require_last_push_approval) = false')"
+expect_deny "audit: non-code-owner with write access" "write access for non-code-owners: helper" \
+  "$s/audit.sh" --state "$(mutate wc '.collaborators += [{"login":"helper","push":true}]')"
+jq '.collaborators += [{"login":"helper","push":true}]' "$here/private-compliant.json" > "$tmp/privcollab.json"
+expect_deny "audit: private repo, non-code-owner with write access" "write access for non-code-owners: helper" \
+  "$s/audit.sh" --state "$tmp/privcollab.json"
+expect_deny "audit: unreadable collaborators deny" "collaborators could not be read" \
+  "$s/audit.sh" --state "$(mutate cn '.collaborators = null')"
 
 for v in public private; do
   mkdir -p "$tmp/$v"

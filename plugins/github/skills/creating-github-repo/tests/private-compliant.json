@@ -28,5 +28,18 @@
     ".github/dependabot.yml": true,
     ".github/workflows/security.yml": true,
     ".github/workflows/scorecard.yml": false
-  }
+  },
+  "codeowners": [
+    "example-owner"
+  ],
+  "collaborators": [
+    {
+      "login": "example-owner",
+      "push": true
+    },
+    {
+      "login": "reader",
+      "push": false
+    }
+  ]
 }
