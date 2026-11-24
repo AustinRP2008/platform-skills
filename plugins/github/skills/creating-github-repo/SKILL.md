@@ -16,7 +16,7 @@ Only free-tier features are used; `references/free-tier-matrix.md` says what eac
 | `name` | lowercase letters, digits, `-`, `.`; 1-100 chars | ask |
 | `visibility` | `public`, `private` | ask, and explain the trade-off below before they choose |
 | `description` | one line | ask |
-| `approvals` | `0`-`6` | `0` for a solo owner (you cannot approve your own PR); `1`+ once there is a team |
+| `approvals` | `1`-`6` | `1`; every PR needs a code owner's approval (see Who can merge) |
 
 **Public vs private on GitHub Free** (say this before they pick):
 - Public gets everything free: an enforced ruleset on `main`, secret scanning with push protection,
@@ -29,7 +29,7 @@ Only free-tier features are used; `references/free-tier-matrix.md` says what eac
 
 ## 2. Plan (dry run)
 ```bash
-${CLAUDE_SKILL_DIR}/scripts/create.sh --name <name> --visibility public --description "<text>" [--approvals 0]
+${CLAUDE_SKILL_DIR}/scripts/create.sh --name <name> --visibility public --description "<text>" [--approvals 1]
 ```
 Prints every control with its status for that visibility (`enforced`, `compensated`, `unavailable`)
 and the exact API calls. Show the user the table and the `unavailable` lines.
@@ -47,8 +47,16 @@ public, SECURITY.md, CODEOWNERS, dependabot.yml, security workflow), then runs `
    re-run the PR's `dependency-review` job (it returns 403 Forbidden until then), then merge the PR.
 3. `scripts/audit.sh <owner>/<repo>`: read-only, exit 1 on any DENY. Safe to run any time (drift check).
 
+## Who can merge
+Only code owners (the handles in `.github/CODEOWNERS`):
+- The ruleset requires a code owner's approval on every PR, re-requested after any new push.
+- GitHub never lets an author approve their own PR, so repo admins get one bypass: merging their
+  own PR through the PR (`gh pr merge --admin`), never a direct push.
+- Every collaborator on a personal-account repo has write access and could merge an approved PR, so
+  the audit denies any collaborator who is not a code owner. Contributors work from forks.
+
 ## Rules
 - Never weaken a control to make something merge; fix the change, or record an exception in the PR.
-- Never add bypass actors to the ruleset. An admin who needs to bypass should notice that they are.
+- Never widen the bypass beyond `admin` + `pull_request` mode, and never add a non-code-owner collaborator.
 - Never paste a token or secret into a file, flag or issue; gitleaks runs on full history.
 - Do not delete repos; the token used here should not have `delete_repo`.

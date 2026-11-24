@@ -20,6 +20,11 @@ def check($c; cond; $why): if cond then pass($c) else deny($c; $why) end;
     check("merge commits disabled"; $s.repo.allow_merge_commit == false; "merge commits are allowed (history is not linear)"),
     check("delete branch on merge"; $s.repo.delete_branch_on_merge == true; "merged branches are left behind"),
     check("wiki disabled"; $s.repo.has_wiki == false; "the wiki is on (content outside review)"),
+    ( if $s.collaborators == null then deny("only code owners can merge"; "collaborators could not be read (undetermined is a deny)")
+      else [ $s.collaborators[] | select(.push == true) | .login | select(. as $l | ($s.codeowners // []) | index($l) | not) ] as $extra
+      | check("only code owners can merge"; ($extra | length) == 0;
+              "write access for non-code-owners: \($extra | join(", ")) (personal-repo collaborators always get write; use forks)")
+      end ),
     ( ["SECURITY.md", ".github/CODEOWNERS", ".github/dependabot.yml", ".github/workflows/security.yml"][] as $f
       | check("file \($f)"; $s.files[$f] == true; "\($f) is missing") ),
     ( if $s.repo.visibility == "public" then
@@ -37,7 +42,15 @@ def check($c; cond; $why): if cond then pass($c) else deny($c; $why) end;
         check("ruleset: gitleaks required";
               [ $rules[] | select(.type == "required_status_checks") | .parameters.required_status_checks[].context ] | index("gitleaks");
               "the gitleaks check is not required"),
-        check("ruleset: no bypass actors"; all($br[]; (.bypass_actors // []) | length == 0); "someone can bypass the ruleset"),
+        check("ruleset: code-owner approval required";
+              any($rules[]; .type == "pull_request" and .parameters.require_code_owner_review == true and .parameters.required_approving_review_count >= 1);
+              "PRs can merge without a code owner's approval"),
+        check("ruleset: approval after last push";
+              any($rules[]; .type == "pull_request" and .parameters.require_last_push_approval == true);
+              "new commits can be pushed after the code owner approved"),
+        check("ruleset: bypass only admin, only via PR";
+              all($br[]; (.bypass_actors // [])[] | .actor_type == "RepositoryRole" and .actor_id == 5 and .bypass_mode == "pull_request");
+              "someone can bypass the ruleset outside a PR, or a non-admin can bypass"),
         check("ruleset: release tags immutable";
               any(($s.rulesets // [])[]; .enforcement == "active" and .target == "tag" and ([.rules[]?.type] | index("deletion") and index("update")));
               "release tags can be moved or deleted")

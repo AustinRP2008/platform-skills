@@ -29,6 +29,9 @@ if [[ -z $state ]]; then
   for f in SECURITY.md LICENSE .github/CODEOWNERS .github/dependabot.yml .github/workflows/security.yml .github/workflows/scorecard.yml; do
     files=$(jq -c --arg f "$f" --argjson e "$(exists "$r/contents/$f")" '. + {($f): $e}' <<<"$files")
   done
+  # Code owners: user handles in CODEOWNERS (teams cannot exist on a personal account). Missing file -> [].
+  owners_raw=$(gh api -H 'Accept: application/vnd.github.raw' "$r/contents/.github/CODEOWNERS" 2>/dev/null) || owners_raw=""
+  codeowners=$(printf '%s\n' "$owners_raw" | sed 's/#.*//' | tr -s ' \t' '\n' | sed -n 's/^@\([A-Za-z0-9-]*\)$/\1/p' | sort -u | jq -Rsc 'split("\n") | map(select(. != ""))')
   state=$(mktemp)
   trap 'rm -f "$state"' EXIT
   jq -n \
@@ -39,7 +42,10 @@ if [[ -z $state ]]; then
     --argjson cs "$(get "$r/code-scanning/default-setup")" \
     --argjson wf "$(get "$r/actions/permissions/workflow")" \
     --argjson ap "$(get "$r/actions/permissions")" \
+    --argjson collab "$(get "$r/collaborators?affiliation=all&per_page=100")" --argjson codeowners "$codeowners" \
     --argjson rulesets "$rulesets" --argjson files "$files" '{
+      codeowners: $codeowners,
+      collaborators: (if $collab == null then null else [$collab[] | {login, push: .permissions.push}] end),
       repo: ($repo | {full_name, visibility, default_branch, allow_merge_commit, delete_branch_on_merge, has_wiki, security_and_analysis}),
       vulnerability_alerts: $va,
       automated_security_fixes: ($asf.enabled // false),

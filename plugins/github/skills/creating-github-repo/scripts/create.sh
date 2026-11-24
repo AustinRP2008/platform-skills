@@ -3,7 +3,7 @@
 # Usage: create.sh --name N --visibility public|private --description TEXT [--owner LOGIN] [--approvals N] [--apply]
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
-apply=false approvals=0 owner=""
+apply=false approvals=1 owner=""
 while [[ $# -gt 0 ]]; do
   case $1 in
     --apply) apply=true; shift; continue;;
@@ -16,7 +16,7 @@ done
 : "${name:?--name required}" "${visibility:?--visibility required}" "${description:?--description required}"
 [[ $name =~ ^[a-z0-9][a-z0-9.-]{0,99}$ ]] || { echo "name must be lowercase letters, digits, '-' or '.', 1-100 chars" >&2; exit 64; }
 [[ $visibility == public || $visibility == private ]] || { echo "visibility must be public or private" >&2; exit 64; }
-[[ $approvals =~ ^[0-6]$ ]] || { echo "approvals must be 0-6" >&2; exit 64; }
+[[ $approvals =~ ^[1-6]$ ]] || { echo "approvals must be 1-6 (code-owner review needs at least one)" >&2; exit 64; }
 [[ -n $owner ]] || owner=$(gh api user -q .login)
 repo=$owner/$name
 if gh api --silent "repos/$repo" >/dev/null 2>&1; then

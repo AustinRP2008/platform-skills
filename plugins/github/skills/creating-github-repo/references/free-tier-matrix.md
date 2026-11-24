@@ -7,6 +7,7 @@ no free equivalent.
 | Control | Public | Private (Free) | How it is applied |
 |---|---|---|---|
 | Ruleset on default branch: PR required, no force push, no deletion, linear history, required checks | enforced | unavailable: API returns `403 Upgrade to GitHub Pro` | `POST /repos/{r}/rulesets` (`assets/ruleset-branch.json`) |
+| Only code owners can merge: code-owner approval, re-approval after push, admin bypass only via PR, no non-owner collaborators | enforced | audited only (no ruleset on Free private); still no non-owner collaborators | `pull_request` rule + `bypass_actors`; `audit.sh` reads collaborators |
 | Tag ruleset: `v*` tags cannot be moved or deleted | enforced | unavailable | `assets/ruleset-tags.json` |
 | Secret scanning + push protection | enforced (on by default for new public repos) | compensated: gitleaks on full history in Actions | `PATCH /repos/{r}` `security_and_analysis` |
 | Code scanning (CodeQL default setup) | enforced as alerts | unavailable (needs GitHub Code Security) | `PATCH /repos/{r}/code-scanning/default-setup` |
