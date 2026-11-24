@@ -1,0 +1,32 @@
+{
+  "repo": {
+    "full_name": "example/compliant-private",
+    "visibility": "private",
+    "default_branch": "main",
+    "allow_merge_commit": false,
+    "delete_branch_on_merge": true,
+    "has_wiki": false
+  },
+  "vulnerability_alerts": true,
+  "automated_security_fixes": true,
+  "private_vulnerability_reporting": false,
+  "code_scanning_default_setup": null,
+  "workflow_permissions": {
+    "default_workflow_permissions": "read",
+    "can_approve_pull_request_reviews": false
+  },
+  "actions_permissions": {
+    "enabled": true,
+    "allowed_actions": "all",
+    "sha_pinning_required": true
+  },
+  "rulesets": [],
+  "files": {
+    "SECURITY.md": true,
+    "LICENSE": false,
+    ".github/CODEOWNERS": true,
+    ".github/dependabot.yml": true,
+    ".github/workflows/security.yml": true,
+    ".github/workflows/scorecard.yml": false
+  }
+}

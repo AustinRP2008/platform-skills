@@ -37,6 +37,11 @@
       "name": "images",
       "source": "./plugins/images",
       "description": "Request, build and promote hardened golden container images with Packer."
+    },
+    {
+      "name": "github",
+      "source": "./plugins/github",
+      "description": "Create GitHub repos with rulesets, security scanning and safe Actions defaults on the free tier; audit and harden existing ones."
     }
   ]
 }

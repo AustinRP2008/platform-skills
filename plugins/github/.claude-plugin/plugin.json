@@ -1,0 +1,9 @@
+{
+  "name": "github",
+  "description": "Create GitHub repositories with branch rulesets, security scanning and safe Actions defaults from day one, on the free tier.",
+  "version": "0.1.0",
+  "author": {
+    "name": "AustinRP2008"
+  },
+  "license": "MIT"
+}
