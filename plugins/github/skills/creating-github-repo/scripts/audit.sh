@@ -25,6 +25,7 @@ if [[ -z $state ]]; then
   # REST returns the merge settings only to tokens that can push. A read-only token gets them from
   # GraphQL; if that fails too they stay null and the policy denies them as unreadable.
   if [[ $(jq '.allow_merge_commit == null or .delete_branch_on_merge == null' <<<"$repo_json") == true ]]; then
+    # shellcheck disable=SC2016 # $o/$n are GraphQL variables, not shell
     gq=$(gh api graphql -F o="${repo%%/*}" -F n="${repo#*/}" \
       -f query='query($o:String!,$n:String!){repository(owner:$o,name:$n){mergeCommitAllowed deleteBranchOnMerge}}' \
       -q '.data.repository' 2>/dev/null) || gq=null
