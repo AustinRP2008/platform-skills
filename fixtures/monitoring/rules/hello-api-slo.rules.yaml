@@ -1,0 +1,47 @@
+groups:
+  - name: hello-api-slo
+    rules:
+      - record: job:http_requests:error_ratio_rate5m
+        expr: |
+          sum by (job) (rate(http_requests_total{job="hello-api",code=~"5.."}[5m]))
+          /
+          sum by (job) (rate(http_requests_total{job="hello-api"}[5m]))
+      - record: job:http_requests:error_ratio_rate30m
+        expr: |
+          sum by (job) (rate(http_requests_total{job="hello-api",code=~"5.."}[30m]))
+          /
+          sum by (job) (rate(http_requests_total{job="hello-api"}[30m]))
+      - record: job:http_requests:error_ratio_rate1h
+        expr: |
+          sum by (job) (rate(http_requests_total{job="hello-api",code=~"5.."}[1h]))
+          /
+          sum by (job) (rate(http_requests_total{job="hello-api"}[1h]))
+      - record: job:http_requests:error_ratio_rate6h
+        expr: |
+          sum by (job) (rate(http_requests_total{job="hello-api",code=~"5.."}[6h]))
+          /
+          sum by (job) (rate(http_requests_total{job="hello-api"}[6h]))
+      - alert: HelloApiErrorBudgetBurnFast
+        expr: |
+          job:http_requests:error_ratio_rate1h{job="hello-api"} > (14.4 * 0.001)
+          and
+          job:http_requests:error_ratio_rate5m{job="hello-api"} > (14.4 * 0.001)
+        for: 2m
+        labels:
+          severity: page
+          team: platform
+        annotations:
+          summary: "hello-api is burning its 99.9% error budget 14x too fast"
+          runbook_url: "runbooks/hello-api-error-budget-burn.md"
+      - alert: HelloApiErrorBudgetBurnSlow
+        expr: |
+          job:http_requests:error_ratio_rate6h{job="hello-api"} > (6 * 0.001)
+          and
+          job:http_requests:error_ratio_rate30m{job="hello-api"} > (6 * 0.001)
+        for: 15m
+        labels:
+          severity: ticket
+          team: platform
+        annotations:
+          summary: "hello-api is burning its 99.9% error budget 6x too fast"
+          runbook_url: "runbooks/hello-api-error-budget-burn.md"

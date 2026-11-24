@@ -35,4 +35,4 @@ jobs:
       - name: validate
         env:
           TARGET: ${{ inputs.path }}
-        run: mise exec -C .platform -- .platform/plugins/k8s/skills/deploying-k8s-golden-path/scripts/validate.sh "$TARGET"
+        run: mise exec -C "$GITHUB_WORKSPACE/.platform" -- "$GITHUB_WORKSPACE/.platform/plugins/k8s/skills/deploying-k8s-golden-path/scripts/validate.sh" "$GITHUB_WORKSPACE/$TARGET"

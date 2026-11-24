@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: hello-api-prod
+resources: [../../base]
+labels:
+  - pairs: {environment: prod}
+patches:
+  - target: {kind: HorizontalPodAutoscaler, name: hello-api}
+    patch: |-
+      - {op: replace, path: /spec/minReplicas, value: 2}
+      - {op: replace, path: /spec/maxReplicas, value: 10}
