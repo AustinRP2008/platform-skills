@@ -1,0 +1,7 @@
+{
+  "_comment": "Add-ons a request may list. Each becomes an addon/<name> label on the cluster's Argo CD registration; the argocd-apps repo installs it. requiredIn: envs where it is mandatory.",
+  "cert-manager":   { "providers": ["gke", "eks"], "requiredIn": ["prod"] },
+  "keda":           { "providers": ["gke", "eks"], "requiredIn": [] },
+  "metrics-server": { "providers": ["eks"],        "requiredIn": [] },
+  "external-dns":   { "providers": ["gke", "eks"], "requiredIn": [] }
+}

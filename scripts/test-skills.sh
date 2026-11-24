@@ -43,7 +43,7 @@ cr=$root/plugins/cloud-requests/skills/requesting-k8s-cluster/scripts
 req() { "$cr/render.sh" --dest "$tmp/requests" "$@"; }
 f=$(req --provider gke --name payments-dev --team payments --env dev --ttl 72h --cost-center cc-1234 --budget 300)
 expect_pass "cloud: gke dev autopilot request plans" "$cr/check.sh" "$f"
-f=$(req --provider eks --name search-prod --team search --env prod --size L --mode managed --cost-center cc-4321 --budget 1500)
+f=$(req --provider eks --name search-prod --team search --env prod --size L --mode managed --cost-center cc-4321 --budget 1500 --addons cert-manager,keda)
 expect_pass "cloud: eks prod managed L request plans" "$cr/check.sh" "$f"
 f=$(req --provider gke --name big-dev --team core --env dev --size L --ttl 24h --cost-center cc-0001 --budget 5000)
 expect_deny "cloud: dev size L denied" "dev clusters are capped at size M" "$cr/check.sh" "$f"
@@ -56,6 +56,13 @@ expect_deny "cloud: unoffered region denied" "is not offered for gke" "$cr/check
 f=$(req --provider gke --name public-dev --team core --env dev --ttl 24h --cost-center cc-0001 --budget 500)
 echo "  publicEndpoint: true" >> "$f"
 expect_deny "cloud: overriding a hidden default denied" "spec.publicEndpoint is not requestable" "$cr/check.sh" "$f"
+
+f=$(req --provider eks --name nocm-prod --team core --env prod --cost-center cc-0001 --budget 5000 --addons keda)
+expect_deny "cloud: prod without cert-manager denied" "must include cert-manager for prod" "$cr/check.sh" "$f"
+f=$(req --provider gke --name mesh-dev --team core --env dev --ttl 24h --cost-center cc-0001 --budget 500 --addons istio)
+expect_deny "cloud: unknown add-on denied" "istio is not in the add-on catalog" "$cr/check.sh" "$f"
+f=$(req --provider gke --name ms-dev --team core --env dev --ttl 24h --cost-center cc-0001 --budget 500 --addons metrics-server)
+expect_deny "cloud: add-on not offered on provider denied" "metrics-server is not offered on gke" "$cr/check.sh" "$f"
 
 ci=$root/plugins/delivery/skills/onboarding-repo-ci/scripts
 mkdir -p "$tmp/svc"
