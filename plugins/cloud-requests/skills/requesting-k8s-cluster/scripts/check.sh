@@ -11,9 +11,10 @@ ref=${PLATFORM_MODULES_REF:-v0.1.0}
 json=$(yq -o=json '.' "$req")
 envs=$(cat "$here/assets/environments.json")
 prices=$(cat "$here/assets/prices.json")
+catalog=$(cat "$here/assets/addons.json")
 
 # ---- policy: every rule prints a reason; no output means allowed.
-denials=$(jq -r --argjson envs "$envs" '
+denials=$(jq -r --argjson envs "$envs" --argjson catalog "$catalog" '
   def ttl_hours: ((.spec.ttl // "") | capture("^(?<h>[0-9]+)h$") | .h | tonumber) // 0;
   .spec as $s | ttl_hours as $h |
   ( if .apiVersion != "platform.local/v1alpha1" or .kind != "ClusterRequest" then "apiVersion/kind must be platform.local/v1alpha1 ClusterRequest" else empty end ),
@@ -32,7 +33,14 @@ denials=$(jq -r --argjson envs "$envs" '
   ( if $s.ttl != null and ($h < 1 or $h > 168) then "ttl must be 1h-168h" else empty end ),
   ( if $s.env == "dev" and $s.size == "L" then "dev clusters are capped at size M" else empty end ),
   ( (keys - ["apiVersion","kind","metadata","spec"])[] | "unknown top-level field: \(.)" ),
-  ( ($s | keys) - ["provider","env","region","mode","size","ttl","costCenter","budgetMonthlyUSD"] | .[] | "spec.\(.) is not requestable (platform default)" )
+  ( if $s.addons != null and ($s.addons | type) != "array" then "spec.addons must be a list" else empty end ),
+  ( ($s.addons // [] | if type == "array" then . else [] end) as $a | ($catalog | del(._comment)) as $cat |
+    ( $a[] | select($cat[.] == null) | "spec.addons: \(.) is not in the add-on catalog (\($cat | keys | join(", ")))" ),
+    ( $a[] | select($cat[.] != null and ($cat[.].providers | index($s.provider)) == null) | "spec.addons: \(.) is not offered on \($s.provider)" ),
+    ( if ($a | length) != ($a | unique | length) then "spec.addons lists an add-on twice" else empty end ),
+    ( $cat | to_entries[] | .key as $k | select((.value.requiredIn | index($s.env)) != null and ($a | index($k)) == null)
+      | "spec.addons must include \($k) for \($s.env) clusters" ) ),
+  ( ($s | keys) - ["provider","env","region","mode","size","ttl","costCenter","budgetMonthlyUSD","addons"] | .[] | "spec.\(.) is not requestable (platform default)" )
 ' <<< "$json")
 
 provider=$(jq -r .spec.provider <<< "$json")
@@ -59,7 +67,8 @@ echo "| | |"
 echo "|---|---|"
 jq -r '"| provider | \(.spec.provider) (\(.spec.mode)) |", "| env / region | \(.spec.env) / \(.spec.region) |",
        "| size | \(.spec.size) |", "| team / cost center | \(.metadata.team) / \(.spec.costCenter) |",
-       "| ttl | \(.spec.ttl // "none (prod)") |"' <<< "$json"
+       "| ttl | \(.spec.ttl // "none (prod)") |",
+       "| add-ons | \((.spec.addons // []) | if type != "array" then tostring elif length == 0 then "none" else join(", ") end) |"' <<< "$json"
 echo "| estimated cost | \$${cost:-?}/month (illustrative) vs budget \$$budget |"
 echo "| approval tier | \`approval:$tier\` |"
 echo

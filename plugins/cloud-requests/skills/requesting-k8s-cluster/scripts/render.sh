@@ -2,12 +2,12 @@
 # Write a ClusterRequest file. See SKILL.md for flags.
 set -euo pipefail
 here=$(cd "$(dirname "$0")/.." && pwd)
-dest=requests/clusters size=S region="" mode="" ttl=""
+dest=requests/clusters size=S region="" mode="" ttl="" addons=""
 while [[ $# -gt 0 ]]; do
   case $1 in
     --provider) provider=$2;; --name) name=$2;; --team) team=$2;; --env) env=$2;; --size) size=$2;;
     --region) region=$2;; --mode) mode=$2;; --ttl) ttl=$2;; --cost-center) cc=$2;; --budget) budget=$2;;
-    --dest) dest=$2;;
+    --dest) dest=$2;; --addons) addons=$2;;
     *) echo "unknown arg $1" >&2; exit 64;;
   esac
   shift 2
@@ -38,5 +38,9 @@ mkdir -p "$dest"
   if [[ -n $ttl ]]; then echo "  ttl: $ttl"; fi
   echo "  costCenter: $cc"
   echo "  budgetMonthlyUSD: $budget"
+  if [[ -n $addons ]]; then
+    echo "  addons:"
+    tr ',' '\n' <<<"$addons" | sed '/^ *$/d; s/^ *//; s/ *$//; s/^/    - /'
+  fi
 } > "$out"
 echo "$out"
