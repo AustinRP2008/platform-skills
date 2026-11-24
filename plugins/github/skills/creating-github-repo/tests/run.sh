@@ -43,6 +43,8 @@ expect_deny "audit: non-code-owner with write access" "write access for non-code
 jq '.collaborators += [{"login":"helper","push":true}]' "$here/private-compliant.json" > "$tmp/privcollab.json"
 expect_deny "audit: private repo, non-code-owner with write access" "write access for non-code-owners: helper" \
   "$s/audit.sh" --state "$tmp/privcollab.json"
+expect_deny "audit: unreadable merge setting denies with its own reason" "merge commits disabled: setting could not be read" \
+  "$s/audit.sh" --state "$(mutate mn '.repo.allow_merge_commit = null')"
 expect_deny "audit: unreadable collaborators deny" "collaborators could not be read" \
   "$s/audit.sh" --state "$(mutate cn '.collaborators = null')"
 
