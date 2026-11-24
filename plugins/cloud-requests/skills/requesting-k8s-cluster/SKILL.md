@@ -22,7 +22,7 @@ is the request, CI re-runs the same checks, and CODEOWNERS approval decides.
 | `ttl` | `1h`-`168h` | required for dev/staging, forbidden for prod |
 | `costCenter` | `cc-` + 4 digits | ask |
 | `budgetMonthlyUSD` | number | must cover the estimate |
-| `addons` | list from `assets/addons.json` (cert-manager, keda, metrics-server, external-dns) | none; prod must include cert-manager |
+| `addons` | list from `assets/addons.json` (cert-manager, keda, metrics-server, external-dns, kube-prometheus-stack) | none; prod must include cert-manager |
 
 Add-ons are not installed by tofu: each becomes an `addon/<name>` label on the cluster's Argo CD
 registration and the GitOps add-on catalog installs it.

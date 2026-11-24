@@ -3,5 +3,6 @@
   "cert-manager":   { "providers": ["gke", "eks"], "requiredIn": ["prod"] },
   "keda":           { "providers": ["gke", "eks"], "requiredIn": [] },
   "metrics-server": { "providers": ["eks"],        "requiredIn": [] },
-  "external-dns":   { "providers": ["gke", "eks"], "requiredIn": [] }
+  "external-dns":   { "providers": ["gke", "eks"], "requiredIn": [] },
+  "kube-prometheus-stack": { "providers": ["gke", "eks"], "requiredIn": [] }
 }
