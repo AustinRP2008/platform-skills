@@ -26,6 +26,7 @@ engineer asks the agent  ->  skill interviews (only the exposed knobs)
 | `cloud-requests` | `requesting-k8s-cluster` | a GKE or EKS cluster: policy, cost estimate, approval tier, mock-provider plan |
 | `delivery` | `onboarding-repo-ci` | one caller workflow running the platform's reusable workflows pinned by SHA |
 | `images` | `building-golden-image` | a hardened container base built with Packer, smoke-tested, promoted by channel |
+| `github` | `creating-github-repo` | a new repo with branch ruleset, secret/code scanning, Dependabot and pinned Actions from the first commit (free tier only), plus `audit.sh` for drift on existing repos |
 
 ## Install
 In Claude Code:
