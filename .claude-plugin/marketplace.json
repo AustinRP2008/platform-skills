@@ -1,0 +1,42 @@
+{
+  "name": "platform-skills",
+  "owner": {
+    "name": "AustinRP2008"
+  },
+  "metadata": {
+    "description": "Self-service platform skills: each skill is a thin layer over scripts that CI also runs; the output is always a PR.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "iac",
+      "source": "./plugins/iac",
+      "description": "Scaffold and validate OpenTofu modules."
+    },
+    {
+      "name": "k8s",
+      "source": "./plugins/k8s",
+      "description": "Deploy a service to Kubernetes via the golden path (Kustomize base + overlays)."
+    },
+    {
+      "name": "observability",
+      "source": "./plugins/observability",
+      "description": "Add Prometheus alerts with promtool unit tests and runbooks."
+    },
+    {
+      "name": "cloud-requests",
+      "source": "./plugins/cloud-requests",
+      "description": "Request cloud resources (GKE, EKS) as reviewed, plan-only PRs."
+    },
+    {
+      "name": "delivery",
+      "source": "./plugins/delivery",
+      "description": "Onboard repos to shared CI and open convention-following PRs."
+    },
+    {
+      "name": "images",
+      "source": "./plugins/images",
+      "description": "Request, build and promote hardened golden container images with Packer."
+    }
+  ]
+}

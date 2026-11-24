@@ -1,0 +1,15 @@
+{
+  "_comment": "Platform-owned values the requester never sees. Placeholders for local practice.",
+  "gke": {
+    "regions": ["us-central1", "europe-west1"],
+    "dev":     { "project_id": "platform-dev-000000",     "network": "platform-dev",     "subnetwork_prefix": "platform-dev" },
+    "staging": { "project_id": "platform-staging-000000", "network": "platform-staging", "subnetwork_prefix": "platform-staging" },
+    "prod":    { "project_id": "platform-prod-000000",    "network": "platform-prod",    "subnetwork_prefix": "platform-prod" }
+  },
+  "eks": {
+    "regions": ["us-east-2", "eu-west-1"],
+    "dev":     { "subnet_ids": ["subnet-dev0000000000001", "subnet-dev0000000000002"] },
+    "staging": { "subnet_ids": ["subnet-stg0000000000001", "subnet-stg0000000000002"] },
+    "prod":    { "subnet_ids": ["subnet-prd0000000000001", "subnet-prd0000000000002", "subnet-prd0000000000003"] }
+  }
+}

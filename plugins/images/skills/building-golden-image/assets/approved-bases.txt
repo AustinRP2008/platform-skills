@@ -1,0 +1,5 @@
+# One repository per line. A golden image must start FROM one of these, pinned by digest.
+debian
+ubuntu
+gcr.io/distroless/base-debian12
+cgr.dev/chainguard/wolfi-base

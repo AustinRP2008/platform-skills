@@ -1,0 +1,9 @@
+{
+  "name": "observability",
+  "description": "Add Prometheus alerts with promtool unit tests and runbooks.",
+  "version": "0.1.0",
+  "author": {
+    "name": "AustinRP2008"
+  },
+  "license": "MIT"
+}

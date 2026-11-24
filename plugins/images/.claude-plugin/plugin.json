@@ -1,0 +1,9 @@
+{
+  "name": "images",
+  "description": "Request, build and promote hardened golden container images with Packer.",
+  "version": "0.1.0",
+  "author": {
+    "name": "AustinRP2008"
+  },
+  "license": "MIT"
+}

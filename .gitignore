@@ -1,0 +1,13 @@
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+packer_cache/
+# Sample output when trying the skills inside this repo.
+/requests/
+/images/
+/apps/
+/monitoring/
+/modules/

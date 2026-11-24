@@ -1,0 +1,9 @@
+{
+  "name": "iac",
+  "description": "Scaffold and validate OpenTofu modules.",
+  "version": "0.1.0",
+  "author": {
+    "name": "AustinRP2008"
+  },
+  "license": "MIT"
+}

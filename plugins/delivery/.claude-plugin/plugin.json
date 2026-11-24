@@ -1,0 +1,9 @@
+{
+  "name": "delivery",
+  "description": "Onboard repos to shared CI and open convention-following PRs.",
+  "version": "0.1.0",
+  "author": {
+    "name": "AustinRP2008"
+  },
+  "license": "MIT"
+}

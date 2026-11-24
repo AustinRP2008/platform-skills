@@ -1,0 +1,9 @@
+{
+  "name": "cloud-requests",
+  "description": "Request cloud resources (GKE, EKS) as reviewed, plan-only PRs.",
+  "version": "0.1.0",
+  "author": {
+    "name": "AustinRP2008"
+  },
+  "license": "MIT"
+}

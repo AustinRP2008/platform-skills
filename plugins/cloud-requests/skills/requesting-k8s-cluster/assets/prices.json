@@ -1,0 +1,5 @@
+{
+  "_comment": "Illustrative monthly USD for practice only; not real pricing. Control plane + typical nodes.",
+  "gke": { "autopilot": { "S": 120, "M": 350, "L": 900 }, "standard": { "S": 180, "M": 520, "L": 1500 } },
+  "eks": { "auto":      { "S": 200, "M": 480, "L": 1300 }, "managed":  { "S": 170, "M": 420, "L": 1150 } }
+}
