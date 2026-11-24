@@ -1,0 +1,40 @@
+rule_files:
+  - ../rules/hello-api-slo.rules.yaml
+evaluation_interval: 1m
+tests:
+  - name: bad burn pages and tickets
+    interval: 1m
+    input_series:
+      - series: 'http_requests_total{job="hello-api",code="200"}'
+        values: '0+588x120'
+      - series: 'http_requests_total{job="hello-api",code="500"}'
+        values: '0+12x120'
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: HelloApiErrorBudgetBurnFast
+        exp_alerts:
+          - exp_labels: {job: hello-api, severity: page, team: platform}
+            exp_annotations:
+              summary: "hello-api is burning its 99.9% error budget 14x too fast"
+              runbook_url: "runbooks/hello-api-error-budget-burn.md"
+      - eval_time: 70m
+        alertname: HelloApiErrorBudgetBurnSlow
+        exp_alerts:
+          - exp_labels: {job: hello-api, severity: ticket, team: platform}
+            exp_annotations:
+              summary: "hello-api is burning its 99.9% error budget 6x too fast"
+              runbook_url: "runbooks/hello-api-error-budget-burn.md"
+  - name: healthy service stays silent
+    interval: 1m
+    input_series:
+      - series: 'http_requests_total{job="hello-api",code="200"}'
+        values: '0+600x420'
+      - series: 'http_requests_total{job="hello-api",code="500"}'
+        values: '0+0.3x420'
+    alert_rule_test:
+      - eval_time: 7h
+        alertname: HelloApiErrorBudgetBurnFast
+        exp_alerts: []
+      - eval_time: 7h
+        alertname: HelloApiErrorBudgetBurnSlow
+        exp_alerts: []
