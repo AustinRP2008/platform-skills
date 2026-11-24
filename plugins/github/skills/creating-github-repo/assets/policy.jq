@@ -17,8 +17,10 @@ def check($c; cond; $why): if cond then pass($c) else deny($c; $why) end;
     check("workflow token read-only"; $s.workflow_permissions.default_workflow_permissions == "read"; "the default GITHUB_TOKEN can write"),
     check("actions cannot approve PRs"; $s.workflow_permissions.can_approve_pull_request_reviews == false; "workflows can approve pull requests"),
     check("actions pinned by sha"; $s.actions_permissions.sha_pinning_required == true; "actions may be referenced by a mutable tag"),
-    check("merge commits disabled"; $s.repo.allow_merge_commit == false; "merge commits are allowed (history is not linear)"),
-    check("delete branch on merge"; $s.repo.delete_branch_on_merge == true; "merged branches are left behind"),
+    check("merge commits disabled"; $s.repo.allow_merge_commit == false;
+          if $s.repo.allow_merge_commit == null then "setting could not be read (undetermined is a deny)" else "merge commits are allowed (history is not linear)" end),
+    check("delete branch on merge"; $s.repo.delete_branch_on_merge == true;
+          if $s.repo.delete_branch_on_merge == null then "setting could not be read (undetermined is a deny)" else "merged branches are left behind" end),
     check("wiki disabled"; $s.repo.has_wiki == false; "the wiki is on (content outside review)"),
     ( if $s.collaborators == null then deny("only code owners can merge"; "collaborators could not be read (undetermined is a deny)")
       else [ $s.collaborators[] | select(.push == true) | .login | select(. as $l | ($s.codeowners // []) | index($l) | not) ] as $extra

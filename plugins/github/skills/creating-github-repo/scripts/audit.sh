@@ -22,6 +22,16 @@ if [[ -z $state ]]; then
   r=repos/$repo
   repo_json=$(get "$r")
   [[ $repo_json != null ]] || { echo "cannot read $repo" >&2; exit 2; }
+  # REST returns the merge settings only to tokens that can push. A read-only token gets them from
+  # GraphQL; if that fails too they stay null and the policy denies them as unreadable.
+  if [[ $(jq '.allow_merge_commit == null or .delete_branch_on_merge == null' <<<"$repo_json") == true ]]; then
+    gq=$(gh api graphql -F o="${repo%%/*}" -F n="${repo#*/}" \
+      -f query='query($o:String!,$n:String!){repository(owner:$o,name:$n){mergeCommitAllowed deleteBranchOnMerge}}' \
+      -q '.data.repository' 2>/dev/null) || gq=null
+    [[ -n $gq ]] || gq=null
+    repo_json=$(jq -c --argjson g "$gq" 'if $g == null then . else
+      .allow_merge_commit //= $g.mergeCommitAllowed | .delete_branch_on_merge //= $g.deleteBranchOnMerge end' <<<"$repo_json")
+  fi
   rulesets='[]'
   ids=$(get "$r/rulesets" | jq -r 'if type == "array" then .[].id else empty end')
   for id in $ids; do rulesets=$(jq -c --argjson x "$(get "$r/rulesets/$id")" '. + [$x]' <<<"$rulesets"); done
