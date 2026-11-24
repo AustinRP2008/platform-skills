@@ -40,10 +40,11 @@ public, SECURITY.md, CODEOWNERS, dependabot.yml, security workflow), then runs `
 `audit.sh`. Report the audit output verbatim; a `DENY` line means the repo is not done.
 
 ## Existing repos
-1. Add the baseline files through a PR: `scripts/files.sh <checkout> --visibility <v> --owner <login>`
-   (existing files are kept). Merge it first: the ruleset requires the `gitleaks` and `osv-scanner` checks.
+1. Open a PR with the baseline files: `scripts/files.sh <checkout> --visibility <v> --owner <login>`
+   (existing files are kept). Wait for its `gitleaks` and `osv-scanner` checks to go green.
 2. `scripts/harden.sh <owner>/<repo> [--approvals N] [--require-check NAME ...]` then `--apply`.
-   Add the repo's own CI job names with `--require-check`.
+   Add the repo's own CI job names with `--require-check`. This turns on the dependency graph, so
+   re-run the PR's `dependency-review` job (it returns 403 Forbidden until then), then merge the PR.
 3. `scripts/audit.sh <owner>/<repo>`: read-only, exit 1 on any DENY. Safe to run any time (drift check).
 
 ## Rules
