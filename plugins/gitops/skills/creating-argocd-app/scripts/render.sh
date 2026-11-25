@@ -33,11 +33,23 @@ root=$dir/bootstrap/root.yaml
 [[ -f $root && -f $dir/bootstrap/project.yaml ]] || die "$dir does not look like argocd-apps (bootstrap/root.yaml, bootstrap/project.yaml)"
 self=$(yq '.spec.source.repoURL' "$root")
 
+# append_item FILE KEY ITEM: add "    - ITEM" after the last item of the top-level spec list KEY, as text, so the
+# rest of the file keeps its formatting (yq -i rewrites every flow mapping). Returns 1 when KEY has no block items.
+append_item() {
+  local n
+  n=$(awk -v k="  $2:" '$0 == k { inl = 1; next }
+    inl && /^    - / { last = NR; next } inl && /^    #/ { next } inl { inl = 0 }
+    END { print last + 0 }' "$1") || return 1
+  [[ $n -gt 0 ]] || return 1
+  awk -v n="$n" -v item="    - $3" '{ print } NR == n { print item }' "$1" > "$1.tmp" && mv "$1.tmp" "$1"
+}
 # allow PROJECT_FILE REPO NAMESPACE: add the repo and namespace to the AppProject if missing.
 allow() {
   R=$2 yq -e '.spec.sourceRepos[] | select(. == strenv(R))' "$1" >/dev/null 2>&1 \
+    || append_item "$1" sourceRepos "$2" \
     || R=$2 yq -i '.spec.sourceRepos += [strenv(R)]' "$1"
   N=$3 yq -e '.spec.destinations[] | select(.namespace == strenv(N))' "$1" >/dev/null 2>&1 \
+    || append_item "$1" destinations "{ server: \"*\", namespace: $3 }" \
     || N=$3 yq -i '.spec.destinations += [{"server": "*", "namespace": strenv(N)}] | .spec.destinations[-1] style="flow"' "$1"
 }
 check_chart() {
