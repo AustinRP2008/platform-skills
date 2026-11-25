@@ -27,6 +27,8 @@ engineer asks the agent  ->  skill interviews (only the exposed knobs)
 | `delivery` | `onboarding-repo-ci` | one caller workflow running the platform's reusable workflows pinned by SHA |
 | `images` | `building-golden-image` | a hardened container base built with Packer, smoke-tested, promoted by channel |
 | `github` | `creating-github-repo` | a new repo with branch ruleset, secret/code scanning, Dependabot and pinned Actions from the first commit (free tier only), plus `audit.sh` for drift on existing repos |
+| `gitops` | `creating-argocd-app` | an Argo CD Application or ApplicationSet (label-selected add-on or env-selected workload) with AppProject allow-lists, kubeconform, policy and a helm render |
+| `ansible` | `writing-ansible-playbook` | a playbook and role with pinned collections and no plaintext secrets that passes syntax check and ansible-lint production profile |
 
 ## Install
 In Claude Code:

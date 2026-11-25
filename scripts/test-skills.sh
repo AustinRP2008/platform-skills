@@ -86,6 +86,46 @@ expect_deny "images: unapproved base denied" "is not in approved-bases.txt" "$im
 sed -i 's/^  supportedUntil: .*/  supportedUntil: "2099-01-01"/' "$tmp/images/py-base/image.yaml"
 expect_deny "images: support date beyond 18 months denied" "must be within 18 months" "$img/validate.sh" "$tmp/images/py-base"
 
+gop=$root/plugins/gitops/skills/creating-argocd-app/scripts
+cp -r "$root/fixtures/argocd-apps" "$tmp/argo"
+"$gop/render.sh" addon --repo-dir "$tmp/argo" --name metrics-server --chart metrics-server \
+  --chart-repo https://kubernetes-sigs.github.io/metrics-server --version 3.14.0 --namespace kube-system >/dev/null
+"$gop/render.sh" appset --repo-dir "$tmp/argo" --name hello-api --git-repo https://github.com/example/hello-api.git \
+  --path apps/hello-api --envs dev,prod >/dev/null 2>&1
+"$gop/render.sh" application --repo-dir "$tmp/argo" --name hello-web --git-repo https://github.com/example/hello-web.git \
+  --path deploy/overlays/homelab >/dev/null
+"$gop/render.sh" application --repo-dir "$tmp/argo" --name podinfo --chart podinfo \
+  --chart-repo https://stefanprodan.github.io/podinfo --version 6.9.2 >/dev/null
+expect_pass "gitops: addon, ApplicationSet and Application validate" "$gop/validate.sh" "$tmp/argo" --offline
+expect_fail "gitops: render refuses to overwrite" "$gop/render.sh" application --repo-dir "$tmp/argo" --name podinfo \
+  --chart podinfo --chart-repo https://stefanprodan.github.io/podinfo --version 6.9.2
+expect_deny "gitops: render refuses a chart range" "exact x.y.z" "$gop/render.sh" addon --repo-dir "$tmp/argo" --name keda \
+  --chart keda --chart-repo https://kedacore.github.io/charts --version '2.x'
+expect_deny "gitops: render refuses a workload in kube-system" "may not deploy into kube-system" "$gop/render.sh" application \
+  --repo-dir "$tmp/argo" --name bad --git-repo https://github.com/example/bad.git --path deploy --namespace kube-system
+cp -r "$tmp/argo" "$tmp/argo-range"; sed -i 's/targetRevision: 3.14.0/targetRevision: 3.x/' "$tmp/argo-range/addons/metrics-server.yaml"
+expect_deny "gitops: chart version range is denied" "not an exact x.y.z pin" "$gop/validate.sh" "$tmp/argo-range" --offline
+cp -r "$tmp/argo" "$tmp/argo-head"; sed -i 's/targetRevision: main/targetRevision: HEAD/' "$tmp/argo-head/apps/hello-api.yaml"
+expect_deny "gitops: ApplicationSet on HEAD is denied" "not HEAD" "$gop/validate.sh" "$tmp/argo-head" --offline
+cp -r "$tmp/argo" "$tmp/argo-repo"; sed -i 's#example/hello-web.git#evil/hello-web.git#' "$tmp/argo-repo/apps/hello-web.yaml"
+expect_deny "gitops: Application from an unlisted repo is denied" "not in bootstrap/apps-project.yaml sourceRepos" "$gop/validate.sh" "$tmp/argo-repo" --offline
+cp -r "$tmp/argo" "$tmp/argo-root"; yq -i '.spec.source.directory.include = "{bootstrap/project.yaml,addons/*.yaml}"' "$tmp/argo-root/bootstrap/root.yaml"
+expect_deny "gitops: root app that skips apps/ is denied" "does not cover apps/" "$gop/validate.sh" "$tmp/argo-root" --offline
+
+ans=$root/plugins/ansible/skills/writing-ansible-playbook/scripts
+"$ans/render.sh" --dest "$tmp/ans" --name base-tools --hosts workstations --packages "htop jq" >/dev/null
+expect_pass "ansible: rendered playbook validates" "$ans/validate.sh" "$tmp/ans" --offline
+expect_fail "ansible: render refuses to overwrite" "$ans/render.sh" --dest "$tmp/ans" --name base-tools --hosts workstations
+expect_deny "ansible: render refuses hosts all" "target a group" "$ans/render.sh" --dest "$tmp/ans" --name other --hosts all
+cp -r "$tmp/ans" "$tmp/ans-all"; sed -i 's/hosts: workstations/hosts: all/' "$tmp/ans-all/playbooks/base-tools.yml"
+expect_deny "ansible: play on all hosts is denied" "play targets 'all'" "$ans/validate.sh" "$tmp/ans-all" --offline
+cp -r "$tmp/ans" "$tmp/ans-pin"; sed -i 's/version: "2.2.2"/version: ">=2.0.0"/' "$tmp/ans-pin/requirements.yml"
+expect_deny "ansible: unpinned collection is denied" "must pin an exact version" "$ans/validate.sh" "$tmp/ans-pin" --offline
+cp -r "$tmp/ans" "$tmp/ans-pw"; echo 'base_tools_db_password: hunter2' >> "$tmp/ans-pw/roles/base_tools/defaults/main.yml"
+expect_deny "ansible: plaintext password is denied" "holds a plaintext secret" "$ans/validate.sh" "$tmp/ans-pw" --offline
+cp -r "$tmp/ans" "$tmp/ans-lint"; sed -i 's/ansible.builtin.file:/file:/' "$tmp/ans-lint/roles/base_tools/tasks/main.yml"
+expect_deny "ansible: non-FQCN module fails ansible-lint" "fqcn" "$ans/validate.sh" "$tmp/ans-lint" --offline
+
 for t in "$root"/plugins/*/skills/*/tests/run.sh; do
   [[ -x $t ]] && expect_pass "$(basename "$(dirname "$(dirname "$t")")"): own test suite" "$t"
 done

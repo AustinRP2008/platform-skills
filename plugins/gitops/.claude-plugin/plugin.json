@@ -1,0 +1,9 @@
+{
+  "name": "gitops",
+  "description": "Add Argo CD Applications and ApplicationSets (cluster add-ons and team apps) to the GitOps hub.",
+  "version": "0.1.0",
+  "author": {
+    "name": "AustinRP2008"
+  },
+  "license": "MIT"
+}

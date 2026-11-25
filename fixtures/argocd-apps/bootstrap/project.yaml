@@ -1,0 +1,17 @@
+# Add-ons may only come from the pinned chart repos below and this repo, and only land in their own namespaces.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform-addons
+  namespace: argocd
+  annotations:
+    # Wave -1: the root app applies the project before the ApplicationSets (wave 0) that reference it.
+    # Without it, a fresh hub can render an ApplicationSet first and fail with "project does not exist".
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Cluster add-ons selected by cluster labels (addon/<name> = "true")
+  sourceRepos:
+    - git@github.com:AustinRP2008/argocd-apps.git
+  destinations: []
+  clusterResourceWhitelist:
+    - {group: "*", kind: "*"}
