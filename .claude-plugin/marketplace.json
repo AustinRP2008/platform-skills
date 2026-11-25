@@ -42,6 +42,16 @@
       "name": "github",
       "source": "./plugins/github",
       "description": "Create GitHub repos with rulesets, security scanning and safe Actions defaults on the free tier; audit and harden existing ones."
+    },
+    {
+      "name": "gitops",
+      "source": "./plugins/gitops",
+      "description": "Add Argo CD Applications and ApplicationSets to the GitOps hub."
+    },
+    {
+      "name": "ansible",
+      "source": "./plugins/ansible",
+      "description": "Write Ansible playbooks and roles that pass ansible-lint production profile and platform policy."
     }
   ]
 }

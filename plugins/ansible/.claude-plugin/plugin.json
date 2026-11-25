@@ -1,0 +1,9 @@
+{
+  "name": "ansible",
+  "description": "Write Ansible playbooks and roles that pass syntax check, ansible-lint production profile and platform policy.",
+  "version": "0.1.0",
+  "author": {
+    "name": "AustinRP2008"
+  },
+  "license": "MIT"
+}
