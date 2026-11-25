@@ -20,8 +20,13 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: {persist-credentials: false}
+      # The ansible venvs mise caches point at a uv-managed Python 3.13; keep that Python inside mise's data dir so
+      # it is cached with them (otherwise a cache hit restores venvs whose interpreter is missing).
       - uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
+        with: {cache_key_prefix: mise-uvpy-v1}
+        env: {UV_PYTHON_INSTALL_DIR: /home/runner/.local/share/mise/uv-python}
       - run: scripts/test-skills.sh
+        env: {UV_PYTHON_INSTALL_DIR: /home/runner/.local/share/mise/uv-python}
   # Self-test: call each reusable workflow the way a product repo does, on fixtures rendered by the skills,
   # with the platform scripts taken from the commit under test.
   reusable-tofu:
