@@ -11,5 +11,7 @@ shellcheck = "0.11.0"
 yq = "4.54.3"
 packer = "1.16.2"
 helm = "3.19.0"
-"pipx:ansible-core" = "2.22.0"
-"pipx:ansible-lint" = { version = "26.11.0", uvx_args = "--with ansible-core==2.22.0" }
+# uv runs the pipx tools; ansible-core 2.22 needs Python >= 3.13, which uv fetches.
+uv = "0.13.9"
+"pipx:ansible-core" = { version = "2.22.0", uvx_args = "--python 3.13" }
+"pipx:ansible-lint" = { version = "26.11.0", uvx_args = "--python 3.13 --with ansible-core==2.22.0" }
