@@ -97,10 +97,12 @@ if ! $offline && [[ ${#addons[@]} -gt 0 ]]; then
   for f in "${addons[@]}"; do
     n=$(basename "$f" .yaml) src='.spec.template.spec.sources[0]'
     repo=$(yq "$src.repoURL" "$f") chart=$(yq "$src.chart" "$f") ver=$(yq "$src.targetRevision" "$f")
+    # Render into the app's own namespace: some charts refuse "default" (nvidia-device-plugin).
+    hns=$(yq '.spec.template.spec.destination.namespace' "$f")
     for vf in addons/values/"$n"/*.yaml; do
       args=(-f "addons/values/$n/default.yaml"); [[ $vf == */default.yaml ]] || args+=(-f "$vf")
       if [[ $repo == oci://* ]]; then ref=("$repo/$chart"); else ref=("$chart" --repo "$repo"); fi
-      if helm template "$n" "${ref[@]}" --version "$ver" "${args[@]}" > "$tmp/out.yaml" 2> "$tmp/err"; then
+      if helm template "$n" "${ref[@]}" --version "$ver" -n "$hns" "${args[@]}" >"$tmp/out.yaml" 2> "$tmp/err"; then
         echo "  $n with $(basename "$vf"): $(command grep -c '^kind:' "$tmp/out.yaml") objects"
       else
         deny "$n with $(basename "$vf"): helm template failed: $(head -2 "$tmp/err")"

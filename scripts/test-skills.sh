@@ -97,6 +97,17 @@ cp -r "$root/fixtures/argocd-apps" "$tmp/argo"
 "$gop/render.sh" application --repo-dir "$tmp/argo" --name podinfo --chart podinfo \
   --chart-repo https://stefanprodan.github.io/podinfo --version 6.9.2 >/dev/null
 expect_pass "gitops: addon, ApplicationSet and Application validate" "$gop/validate.sh" "$tmp/argo" --offline
+cp -r "$tmp/argo" "$tmp/argo-fmt"
+# Hand-written flow style ({ a: b }), as in the real repo; yq -i would rewrite it to {a: b}.
+sed -i -E "s/\{([^ ])/{ \1/; s/([^ ])\}/\1 }/" "$tmp/argo-fmt/bootstrap/project.yaml"
+cp "$tmp/argo-fmt/bootstrap/project.yaml" "$tmp/project.before"
+"$gop/render.sh" addon --repo-dir "$tmp/argo-fmt" --name keda --chart keda --chart-repo https://kedacore.github.io/charts \
+  --version 2.21.1 >/dev/null
+fmt_diff() {
+  local d; d=$(diff "$tmp/project.before" "$tmp/argo-fmt/bootstrap/project.yaml")
+  [[ $(command grep -c '^<' <<<"$d") == 0 && $(command grep -c '^>' <<<"$d") == 2 ]] || { echo "$d"; return 1; }
+}
+expect_pass "gitops: render appends to the AppProject without reformatting it" fmt_diff
 expect_fail "gitops: render refuses to overwrite" "$gop/render.sh" application --repo-dir "$tmp/argo" --name podinfo \
   --chart podinfo --chart-repo https://stefanprodan.github.io/podinfo --version 6.9.2
 expect_deny "gitops: render refuses a chart range" "exact x.y.z" "$gop/render.sh" addon --repo-dir "$tmp/argo" --name keda \
